@@ -11,24 +11,28 @@ import traceback
 import os
 
 # You may want to reduce this considerably if you don't have a killer GPU:
-EPOCHS = 10
+EPOCHS = 150
 TENSORBOARD_DIR = "TensorBoard/"
-
 
 
 train_data_path = 'gs://kfki-single-cell-fibronectin/merged_corrected_data/train.csv'
 test_data_path = 'gs://kfki-single-cell-fibronectin/merged_corrected_data/test.csv'
 
-train_x, train_y = return_dataset(train_data_path)
-test_x, test_y = return_dataset(test_data_path)
-
 
 def build_and_train_rnn(hype_space,log_for_tensorboard=True):
 
+    train_x, train_y = return_dataset(train_data_path,hype_space['normalize_data'])
+    test_x, test_y = return_dataset(test_data_path,hype_space['normalize_data'])
+
     model = Sequential()
     model.add(InputLayer(input_shape=(600,1)))
-    model.add(return_cell_type(hype_space['cell_type'])(int(hype_space['hidden_dim'])))
-
+    if hype_space['depth']==1:
+      model.add(return_cell_type(hype_space['cell_type'])(int(hype_space['hidden_dim'])))
+    if hype_space['depth']==2:
+      model.add(return_cell_type(hype_space['cell_type'])(int(hype_space['hidden_dim']),return_sequences=True))
+      model.add(return_cell_type(hype_space['cell_type'])(int(hype_space['hidden_dim'])))
+    if hype_space['fc_dim']:
+      model.add(Dense(int(hype_space['fc_dim']), activation='relu'))
     model.add(Dense(2, activation='softmax'))
     model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
 
@@ -64,7 +68,7 @@ def build_and_train_rnn(hype_space,log_for_tensorboard=True):
     print(f'History keys: {history.keys()}')
     score = model.evaluate(test_x, test_y, verbose=0)
 
-    model_name = "model_{:.4f}_{}".format(score[1], str(uuid.uuid4())[:5])
+    model_name = "model_{:.4f}_{}".format(score[1], model_uuid)
     print("Model name: {}".format(model_name))
 
     result = {

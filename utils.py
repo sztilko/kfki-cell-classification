@@ -51,12 +51,24 @@ def load_best_hyperspace():
     best_result_name = results[-1]
     return load_json_result(best_result_name)["space"]
 
-def return_dataset(path):
+def print_model_data(fields):
+  #prints the model values given in the list of fields
+  results = [f for f in list(sorted(os.listdir(RESULTS_DIR))) if 'json' in f]
+  if len(results) == 0:
+    return None
+
+  best_result_name = results[-1]
+  result = load_json_result(best_result_name)
+  for field in fields:
+    print(f"{field} : {result[field]}")
+    
+def return_dataset(path,normalize):
   data = pd.read_csv(path)
   data.pop(data.columns[0]) #pop the original index
   data_x = data[data.columns[1:]]
   # "normalize" data
-  # data_x=data_x/1500
+  if normalize:
+    data_x=data_x/1500
   data_x = np.expand_dims(np.asarray(data_x).astype('float32'),-1)
 
   data_y = data['0'] # 'hela' or 'preo' string labels

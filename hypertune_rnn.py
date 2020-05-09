@@ -1,5 +1,5 @@
 from model import build_and_train_rnn
-from utils import print_json, save_json_result, load_best_hyperspace
+from utils import print_json, save_json_result, load_best_hyperspace,print_model_data
 from hyperopt import hp, tpe, fmin, Trials
 import tensorflow as tf
 import pickle
@@ -10,6 +10,9 @@ space = {
     'hidden_dim': hp.quniform('hidden_dim', 32, 256,1),
     'batch_size': hp.quniform('batch_size', 100, 450, 5),
     'cell_type': hp.choice('cell_type', ['LSTM', 'GRU']),
+    'normalize_data' : hp.choice('normalize_data', [True, False]),
+    'depth' : hp.choice('depth', [1, 2]),
+    'fc_dim' : hp.choice('fc_status',[None, hp.quniform('fc_dim', 2, 64, 1)])
 }
 
 
@@ -20,6 +23,7 @@ def print_best_model():
         return
 
     print("Best hyperspace yet:")
+    print_model_data(['model_name','train_accuracy','test_accuracy','model_param_num'])
     print_json(space_best_model)
 
 
@@ -37,7 +41,7 @@ def optimize_rnn(hype_space):
 
 def run_a_trial():
     """Run one TPE meta optimisation step and save its results."""
-    max_evals = nb_evals = 10
+    max_evals = nb_evals = 1
 
     print("Attempt to resume a past training if it exists:")
 
@@ -65,12 +69,12 @@ def run_a_trial():
 
 
 if __name__ == "__main__":
-    # while True:
+    while True:
 
-    # Optimize a new model with the TPE Algorithm:
-    print("OPTIMIZING NEW MODEL:")
-    run_a_trial()
+      # Optimize a new model with the TPE Algorithm:
+      print("OPTIMIZING NEW MODEL:")
+      run_a_trial()
 
-    # Replot best model since it may have changed:
-    print("PLOTTING BEST MODEL:")
-    print_best_model()
+      # Replot best model since it may have changed:
+      print("PLOTTING YET BEST MODEL:")
+      print_best_model()
